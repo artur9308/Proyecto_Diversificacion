@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cultivos</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+
+<body>
+
+<h1>Lista de Cultivos 🌱</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Rentabilidad</th>
+        </tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+</table>
+
+<h2>Mapa de Cultivos 🌍</h2>
+<div id="map" style="height: 400px;"></div>
+
+<!-- 📊 TABLA -->
+<script>
+fetch('/api/cultivos')
+    .then(res => res.json())
+    .then(data => {
+        const tabla = document.getElementById('tabla')
+
+        tabla.innerHTML = data.map(c => `
+            <tr>
+                <td>${c.nombre}</td>
+                <td>${c.rentabilidad}</td>
+            </tr>
+        `).join('')
+    })
+</script>
+
+<!-- 📍 Leaflet -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- 🗺️ MAPA -->
+<script>
+const map = L.map('map').setView([19.25, -99.08], 10)
+
+// capa base
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map)
+
+// 📌 marcador
+L.marker([19.25, -99.08])
+    .addTo(map)
+    .bindPopup('Zona agrícola 🌱')
+    .openPopup()
+
+// 🌍 GEOJSON REAL
+fetch('/static/limite-de-las-alcaldias.json')
+    .then(res => res.json())
+    .then(data => {
+        L.geoJSON(data, {
+            style: {
+                color: 'green',
+                fillColor: 'lightgreen',
+                fillOpacity: 0.3
+            },
+            onEachFeature: (feature, layer) => {
+                if (feature.properties && feature.properties.NOMGEO) {
+                    layer.bindPopup(feature.properties.NOMGEO)
+                }
+            }
+        }).addTo(map)
+    })
+</script>
+
+</body>
+</html>
