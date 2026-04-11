@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, send_from_directory
 import mysql.connector
 
 app = Flask(__name__, static_folder='static')
+app.config['JSON_AS_ASCII']=False
 
 @app.route('/static/<path:filename>')
 def static_files(filename):
@@ -16,6 +17,7 @@ def get_connection():
         password="root123",  # 👈 de tu .env
         database="milpa_alta_agricola",
         charset="utf8mb4",
+        collation="utf8mb4_general_ci",
         use_unicode=True
     )
 
@@ -29,6 +31,7 @@ def home():
 def cultivos():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+    cursor.execute("SET NAMES utf8mb4;")
 
     cursor.execute("""
         SELECT 
@@ -38,7 +41,7 @@ def cultivos():
             r.precio_productor,
             r.ingreso_bruto,
             r.costo_total,
-            r.utilidad_neta
+            r.utilidad_neta as rentabilidad
         FROM cultivos c
         JOIN resumen_economico r 
             ON c.id_cultivo = r.id_cultivo
